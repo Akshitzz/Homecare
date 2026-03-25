@@ -249,14 +249,15 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton 
-              asChild 
               tooltip="Logout"
-              className="h-9 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              className="h-9 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 cursor-pointer"
+              onClick={async () => {
+                const { logout } = await import("@/app/actions/auth")
+                await logout()
+              }}
             >
-              <Link href="/login">
-                <LogOut className="size-4" />
-                <span>Sign out</span>
-              </Link>
+              <LogOut className="size-4" />
+              <span>Sign out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

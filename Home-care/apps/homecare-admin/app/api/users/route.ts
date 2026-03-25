@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseAdmin, verifyAdmin } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 import type { User } from "@/lib/types"
 
 export async function GET(request: Request) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const { searchParams } = new URL(request.url)
   const status = searchParams.get("status")
   const role = searchParams.get("role")
+  const supabase = getSupabaseAdmin()
 
   let query = supabase
     .from("users")
@@ -41,7 +46,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
+    const supabase = getSupabaseAdmin()
     const body = await request.json() as User
     const { data, error } = await supabase
       .from("users")
@@ -67,7 +76,11 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
+    const supabase = getSupabaseAdmin()
     const body = await request.json()
     const { id, ...updates } = body
 
@@ -97,7 +110,11 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!(await verifyAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
   try {
+    const supabase = getSupabaseAdmin()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
 

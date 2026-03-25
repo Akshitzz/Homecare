@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseAdmin, verifyAdmin } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
+    if (!(await verifyAdmin())) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const supabase = getSupabaseAdmin()
+
     const [bookingsRes, usersRes, servicesRes, revenueRes, chartRes] = await Promise.all([
       supabase.from("bookings").select("id", { count: "exact", head: true }),
       supabase.from("users").select("id", { count: "exact", head: true }),

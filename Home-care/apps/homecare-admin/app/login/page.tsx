@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Home, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { FieldGroup, Field, FieldLabel } from "@/components/ui/field"
@@ -23,24 +23,35 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!email || !password) {
       toast.error("Please fill in all fields")
       return
     }
 
     setIsLoading(true)
-    
-    // Simulate authentication
-    setTimeout(() => {
-      if (email === "admin@homecare.com" && password === "admin123") {
+
+    try {
+      const { login } = await import("@/app/actions/auth")
+
+      const formData = new FormData()
+      formData.append("email", email)
+      formData.append("password", password)
+
+      const res = await login(formData)
+
+      if (res?.error) {
+        toast.error(res.error)
+        setIsLoading(false)
+      } else if (res?.success) {
+        // Successful login, manually redirect to avoid NEXT_REDIRECT errors in try/catch
         toast.success("Welcome back!")
         router.push("/dashboard")
-      } else {
-        toast.error("Invalid credentials. Try admin@homecare.com / admin123")
-        setIsLoading(false)
       }
-    }, 1000)
+    } catch (err) {
+      toast.error("An unexpected error occurred.")
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -53,7 +64,7 @@ export default function LoginPage() {
       )}>
         {/* Background pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
-        
+
         <div className="relative">
           <Link href="/" className="flex items-center gap-3">
             <div className={cn(
@@ -147,7 +158,6 @@ export default function LoginPage() {
                         className="h-11"
                       />
                       <InputGroupAddon
-                        isButton
                         onClick={() => setShowPassword(!showPassword)}
                         className="cursor-pointer hover:text-foreground transition-colors"
                       >
@@ -185,9 +195,9 @@ export default function LoginPage() {
                 </FieldGroup>
               </CardContent>
               <CardFooter className="flex flex-col gap-4 pt-2">
-                <Button 
-                  type="submit" 
-                  className="w-full h-11 text-sm font-medium" 
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-sm font-medium"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -202,12 +212,7 @@ export default function LoginPage() {
                     </>
                   )}
                 </Button>
-                <div className={cn(
-                  "w-full rounded-lg px-3 py-2.5 text-center text-xs",
-                  "bg-muted/50 text-muted-foreground"
-                )}>
-                  Demo: <span className="font-medium text-foreground">admin@homecare.com</span> / <span className="font-medium text-foreground">admin123</span>
-                </div>
+
               </CardFooter>
             </form>
           </Card>
