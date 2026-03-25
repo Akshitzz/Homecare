@@ -24,8 +24,32 @@ export async function GET() {
         .order("created_at", { ascending: true }),
     ])
 
+    const anyError =
+      bookingsRes.error ||
+      usersRes.error ||
+      servicesRes.error ||
+      revenueRes.error ||
+      chartRes.error
+
+    if (anyError) {
+      // Helps debug cases where counts become 0 due to query failure.
+      return NextResponse.json(
+        {
+          error: "Failed to load dashboard stats",
+          details: {
+            bookings: bookingsRes.error,
+            users: usersRes.error,
+            services: servicesRes.error,
+            revenue: revenueRes.error,
+            chart: chartRes.error,
+          },
+        },
+        { status: 500 }
+      )
+    }
+
     const totalRevenue = (revenueRes.data ?? []).reduce(
-      (sum: number, b: { amount: number }) => sum + (b.amount ?? 0),
+      (sum: number, b: { amount: number | string | null }) => sum + Number(b.amount ?? 0),
       0
     )
 
@@ -45,7 +69,7 @@ export async function GET() {
       const key = monthNames[d.getMonth()]
       if (chartMap[key]) {
         chartMap[key].bookings += 1
-        if (b.payment_status === "paid") chartMap[key].revenue += b.amount ?? 0
+        if (b.payment_status === "paid") chartMap[key].revenue += Number(b.amount ?? 0)
       }
     }
 
